@@ -14,7 +14,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ngnawens@gmail.com
+    username: n****s@gmail.com
     password: vmhlpwmwwjwrwmnb #Password generated when the multi-authenticator is configured on your Server Messager
     protocol: smtp
     properties:
