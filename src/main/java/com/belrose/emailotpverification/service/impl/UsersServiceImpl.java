@@ -6,13 +6,14 @@ import com.belrose.emailotpverification.model.Users;
 import com.belrose.emailotpverification.repository.UsersRepository;
 import com.belrose.emailotpverification.service.UsersService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UsersServiceImpl implements UsersService {
     private final UsersRepository usersRepository;
     private final EmailService emailService;
@@ -20,19 +21,27 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public RegisterResponse register(RegisterRequest registerRequest) {
        Users existingUser = usersRepository.findByEmail(registerRequest.getEmail()).block();
-       if(existingUser!=null && existingUser.isVerified()){
-           throw new RuntimeException("User Already Registered");
+       log.info("UsersServiceImpl:register: existing user {}",existingUser);
+       if(existingUser!=null && (existingUser.getEmail().equals(registerRequest.getEmail()) || existingUser.isVerified())){
+           log.error("UsersServiceImpl:register: User already registered and/or verified {}",existingUser);
+           throw new RuntimeException("User already registered and/or verified");
        }
+
         String otp = generateOTP();
+        log.info("UsersServiceImpl:register: OTP generated {}",otp);
         Users users = Users.builder()
                 .userName(registerRequest.getUserName())
                 .email(registerRequest.getEmail())
                 .password(registerRequest.getPassword())
                 .otp(otp)
                 .build();
+
        Users saveUser = usersRepository.save(users).block();
+
         assert saveUser != null;
-        sendVerificationEmail(saveUser.getEmail(),otp);
+
+        sendOtpToEmail(saveUser.getEmail(),otp);
+
         return RegisterResponse.builder()
                 .userName(users.getUserName())
                 .email(users.getEmail())
@@ -65,12 +74,13 @@ public class UsersServiceImpl implements UsersService {
     }
 
     private String generateOTP(){
+        //Generates a 6-digit OTP
         Random random = new Random();
-       int optValue =  10000 + random.nextInt(90000);
+       int optValue =  100_000 + random.nextInt(900_000);
        return String.valueOf(optValue);
     }
 
-    private void sendVerificationEmail(String email,String otp){
+    private void sendOtpToEmail(String email, String otp){
         String subject = "Email Verification";
         String body = String.format("Your verification OTP is : %s ",otp);
         emailService.sendEmail(email,subject,body);

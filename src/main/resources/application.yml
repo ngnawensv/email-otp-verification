@@ -11,15 +11,12 @@ spring:
       database: emailotpverificationdb
 
 #Gmail Server message configuration
+#Added the line below in your configuration VM and make sure to specify the rigth username and password
+#MAIL_HOST=smtp.gmail.com;MAIL_PORT=587;MAIL_USERNAME=Your username;MAIL_PASSWORD=Your password
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: n****s@gmail.com
-    password: vmhlp*m**j*r*mnb #wPassword generated when the multi-authenticator is configured on your Server Messager
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME} #Sender email
+    password: ${MAIL_PASSWORD} # sender password
     protocol: smtp
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+
